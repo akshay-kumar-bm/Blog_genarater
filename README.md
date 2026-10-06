@@ -1,113 +1,47 @@
-# AI Blog Generator for Small Business Solutions
+# AI Blog Generator (CrewAI + LangGraph)
 
-An intelligent blog generation system leveraging CrewAI to create SEO-optimized content for small business AI solutions.
+Generates an SEO-oriented blog post for a small-business AI consultancy from the code and outputs of a Jupyter notebook, using a team of LLM agents.
 
-## 🚀 Features
+## What it does
+It extracts code and outputs from a notebook (`data/demo_test.ipynb` by default), then runs a three-agent CrewAI workflow that analyses it, writes the post and optimises it for search. The result is saved as a Markdown file (`akshay_small_business_ai_blog.md` is a sample output).
 
-- **Multi-Agent Collaboration**: Utilizes specialized AI agents working together:
+## Features
+- Three CrewAI agents: AI Solutions Research Specialist, Small Business AI Content Strategist, Small Business AI SEO Specialist (`src/agents/agent_definitions.py`), with three sequential tasks (`src/tasks/task_definitions.py`).
+- Gemini 2.0 Flash (`gemini/gemini-2.0-flash`, temperature 0.5) via CrewAI `LLM`; web search with `SerperDevTool`.
+- Notebook extractor utility (`src/utils/notebook_extractor.py`).
+- Configurable business details and target keywords (`src/config/business_details.py`).
+- Alternative implementation in `demo_using_langgraph/`: a LangGraph state machine (parse notebook, clean code, draft blog, feedback, accept/reject, final blog) using LangChain with Gemini or GitHub-hosted GPT-4o models.
 
-  - **AI Solutions Research Specialist**: Analyzes data and researches market trends
-  - **Small Business AI Content Strategist**: Creates engaging, informative content
-  - **Small Business AI SEO Specialist**: Optimizes content for search engines
-
-- **Jupyter Notebook Integration**: Extracts code and output from notebooks to incorporate technical insights into blog content
-
-- **Customizable Business Context**:
-
-  - Target keywords optimization
-  - Business niche specialization
-  - Service offerings inclusion
-  - Value proposition emphasis
-
-- **Complete Content Pipeline**:
-
-  - Research and data analysis
-  - Content creation with proper structure and engagement
-  - SEO optimization with meta elements and schema suggestions
-  - Local SEO considerations
-
-- **Advanced AI Model**: Powered by Gemini 2.0 Flash for high-quality content generation
-
-## 📋 Requirements
-
-- Python 3.8+
-- CrewAI
-- Gemini API key
-- SerperDev API key (for search capabilities)
-
-## 🔧 Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/ai-blog-generator.git
-cd ai-blog-generator
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set up environment variables
-# Create a .env file with your API keys:
-# GEMINI_API_KEY=your_gemini_api_key
-# SERPER_API_KEY=your_serper_api_key
+## Flow
+```mermaid
+flowchart LR
+  NB[Notebook] --> EX[extract code + output]
+  EX --> A1[Research agent] --> A2[Content agent] --> A3[SEO agent] --> MD[Markdown blog]
 ```
 
-## 💻 Usage
+## Tech stack
+Python, CrewAI, crewai-tools (Serper), Gemini, LangChain / LangGraph, python-dotenv, Jupyter.
 
-1. Prepare your Jupyter notebook with relevant data in the `data/` directory
+## Structure
+```
+blog_genaroter.py          # entry point -> src.main.generate_blog()
+src/{agents,tasks,config,utils,main.py}
+demo_using_langgraph/      # LangGraph variant + notebook
+old_blog_gen.py            # earlier single-file version
+data/raw/demo_test.ipynb   # (note: default path is data/demo_test.ipynb)
+config/ notebooks/ tests/  # mostly placeholders
+```
 
-2. Configure your business details in the script:
+## Setup / run
+```bash
+pip install crewai crewai-tools python-dotenv   # requirement.txt only lists python-dotenv
+# .env
+SERPER_API_KEY=...
+GEMINI_API_KEY=...
+# LangGraph variant also uses GITHUB_TOKEN
+python blog_genaroter.py
+```
+Note: the default `NOTEBOOK_PATH` is `data/demo_test.ipynb`, while the sample notebook lives at `data/raw/demo_test.ipynb`; adjust one of them.
 
-   ```python
-   business_details = {
-       "name": "Your Name",
-       "focus": "Your business focus",
-       "services": {
-           # Your services and pricing
-       },
-       "value_props": [
-           # Your value propositions
-       ],
-       "contact": "your.email@example.com"
-   }
-   ```
-
-3. Set your target keywords and business niche:
-
-   ```python
-   target_keywords = ["Keyword 1", "Keyword 2", ...]
-   business_niche = "Your Business Niche"
-   ```
-
-4. Run the blog generation script:
-
-   ```bash
-   python blog_gen.py
-   ```
-
-5. Find your generated blog post in the output file (default: `akshay_small_business_ai_blog.md`)
-
-## 🔄 Workflow
-
-1. **Data Analysis**: The AI Research Specialist analyzes notebook data and conducts market research
-2. **Content Creation**: The Content Strategist crafts engaging blog content based on research findings
-3. **SEO Optimization**: The SEO Specialist optimizes the content for search engines
-4. **Output**: The final blog post is saved as a markdown file
-
-## 🛠️ Customization
-
-- Modify agent roles and goals to focus on different industries or content types
-- Adjust LLM parameters for different content styles
-- Change target keywords and business details for different marketing objectives
-- Update notebook data source for different technical insights
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 👥 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📧 Contact
-
-For any questions or feedback, please contact: akshaykumarbm.aifx@gmail.com
+## Limitations
+Dependency file is incomplete; README references `blog_gen.py` and `requirements.txt`, which do not exist; tests are placeholders; business details are hard-coded to the author's consultancy.
